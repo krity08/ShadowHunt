@@ -1,0 +1,16 @@
+{
+  "name": "shadowhunt",
+  "version": "1.0.0",
+  "description": "Advanced Threat Detection Tool for Digital Forensics",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "bcryptjs": "^2.4.3",
+    "express-session": "^1.17.3",
+    "chart.js": "^4.4.0"
+  }
+}
