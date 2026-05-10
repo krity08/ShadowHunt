@@ -1,0 +1,59 @@
+{
+  "failedLogins": [
+    {
+      "timestamp": "2026-05-10T05:57:10.817Z",
+      "username": "kritys",
+      "ip": "::1"
+    }
+  ],
+  "scans": [
+    {
+      "filename": "Screenshot (90).png",
+      "timestamp": "2026-05-09T14:50:33.200Z",
+      "analysis": {
+        "threatScore": 10,
+        "threatLevel": "low",
+        "infectedLines": 4,
+        "cleanLines": 379,
+        "fileName": "Screenshot (90).png",
+        "fileSize": 308420,
+        "fileType": ".png"
+      },
+      "user": "admin"
+    },
+    {
+      "filename": "CS_2026_Syllabus.pdf",
+      "timestamp": "2026-05-09T14:56:29.514Z",
+      "analysis": {
+        "threatScore": 30,
+        "threatLevel": "low",
+        "infectedLines": 23,
+        "cleanLines": 276,
+        "fileName": "CS_2026_Syllabus.pdf",
+        "fileSize": 548182,
+        "fileType": ".pdf",
+        "keywordsFound": 0,
+        "keywordList": []
+      },
+      "detectedKeywords": [],
+      "user": "admin"
+    },
+    {
+      "filename": "Krity Singh.png",
+      "timestamp": "2026-05-10T05:53:29.962Z",
+      "analysis": {
+        "threatScore": 45,
+        "threatLevel": "medium",
+        "infectedLines": 46,
+        "cleanLines": 474,
+        "fileName": "Krity Singh.png",
+        "fileSize": 129429,
+        "fileType": ".png",
+        "keywordsFound": 0,
+        "keywordList": []
+      },
+      "detectedKeywords": [],
+      "user": "admin"
+    }
+  ]
+}

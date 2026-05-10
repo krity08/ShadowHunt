@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowHunt | Incident Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🔍 SHADOWHUNT // <span class="logo-sub">FORENSIC SUITE</span></div>
+            <div class="nav-links">
+                <a href="/dashboard" class="active">DASHBOARD</a>
+                <a href="/upload">UPLOAD</a>
+                <a href="/logout">EXIT</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>⚡ INCIDENT DASHBOARD</h1>
+                <p class="tagline">"Evidence never dies" | Real-time threat intelligence</p>
+            </div>
+            <div class="header-right">
+                <div class="live-badge">
+                    <span class="pulse"></span> LIVE MONITORING
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid - Main Cards -->
+        <div class="stats-grid-main">
+            <div class="stat-card-main total-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <span class="stat-label">TOTAL INCIDENTS</span>
+                    <span class="stat-value" id="totalIncidents">0</span>
+                </div>
+            </div>
+            <div class="stat-card-main high-card">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-content">
+                    <span class="stat-label">HIGH SEVERITY</span>
+                    <span class="stat-value" id="highSeverity">0</span>
+                </div>
+            </div>
+            <div class="stat-card-main medium-card">
+                <div class="stat-icon">🟡</div>
+                <div class="stat-content">
+                    <span class="stat-label">MEDIUM SEVERITY</span>
+                    <span class="stat-value" id="mediumSeverity">0</span>
+                </div>
+            </div>
+            <div class="stat-card-main low-card">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-content">
+                    <span class="stat-label">LOW SEVERITY</span>
+                    <span class="stat-value" id="lowSeverity">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="analytics-grid">
+            <!-- Chart Card -->
+            <div class="analytics-card chart-card">
+                <div class="card-header">
+                    <h3>📈 THREAT DISTRIBUTION</h3>
+                    <span class="card-badge">Last 30 days</span>
+                </div>
+                <canvas id="threatChart"></canvas>
+            </div>
+
+            <!-- Clean vs Infected Card -->
+            <div class="analytics-card lines-card">
+                <div class="card-header">
+                    <h3>🔍 CODE ANALYSIS</h3>
+                    <span class="card-badge">Lines of Code</span>
+                </div>
+                <div class="lines-stats">
+                    <div class="line-stat clean">
+                        <span class="line-label">CLEAN LINES</span>
+                        <span class="line-value" id="totalClean">0</span>
+                        <div class="line-progress">
+                            <div class="progress-fill clean-fill" id="cleanProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="line-stat infected">
+                        <span class="line-label">INFECTED LINES</span>
+                        <span class="line-value" id="totalInfected">0</span>
+                        <div class="line-progress">
+                            <div class="progress-fill infected-fill" id="infectedProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="threat-level-indicator" id="threatLevelCard">
+                    <span class="threat-label">CURRENT THREAT LEVEL</span>
+                    <span class="threat-value" id="threatLevelValue">SCANNING...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Section -->
+        <div class="logs-grid">
+            <!-- Recent Scans -->
+            <div class="logs-card">
+                <div class="card-header">
+                    <h3>📋 RECENT INCIDENTS</h3>
+                    <span class="card-badge">Timeline</span>
+                </div>
+                <div class="scans-list" id="recentScans">
+                    <div class="empty-state">No incidents detected yet</div>
+                </div>
+            </div>
+
+            <!-- Failed Logins -->
+            <div class="logs-card">
+                <div class="card-header">
+                    <h3>⚠️ SUSPICIOUS ACTIVITY</h3>
+                    <span class="card-badge">Failed Logins</span>
+                </div>
+                <div class="logins-list" id="failedLogins">
+                    <div class="empty-state">No suspicious activity</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timestamp Footer -->
+        <div class="dashboard-footer">
+            <span class="timestamp" id="timestamp"></span>
+            <span class="system-status">🟢 ALL SYSTEMS OPERATIONAL</span>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

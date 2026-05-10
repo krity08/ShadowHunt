@@ -1,0 +1,59 @@
+[
+  {
+    "username": "admin",
+    "password": "$2a$10$9GINoYHGK18Iwc0VuiVg/uRkrdJnZDBdshfFi.4g43lzjR5qt7lSm"
+  },
+  {
+    "username": "kritys",
+    "email": "kritysingh151@gmail.com",
+    "password": "$2a$10$j5/AIkot5pqt10aKvjCdQuYMcs6YgXHelzR8aVUIdq1y2maVoYmVC",
+    "createdAt": "2026-05-10T06:06:00.865Z"
+  },
+  {
+    "username": "abc",
+    "email": "kritysingh0807@gmail.com",
+    "password": "$2a$10$Xjfg51pmkERZf54XYnP2WuTZFuwFGGcs43r/FEil7YupN4KNU98PS",
+    "createdAt": "2026-05-10T06:06:55.374Z"
+  },
+  {
+    "username": "krits",
+    "email": "kritysingh0809@gmail.com",
+    "password": "$2a$10$Gy58ztVBarZ634mCovKmh.Ak0RMyDJYf9iMU3qFVH2Nmo.ZU1hBTa",
+    "createdAt": "2026-05-10T06:12:41.045Z",
+    "scans": [
+      {
+        "filename": "Complete Lecture Planner.pdf",
+        "timestamp": "2026-05-10T06:13:05.534Z",
+        "analysis": {
+          "threatScore": 30,
+          "threatLevel": "low",
+          "infectedLines": 20,
+          "cleanLines": 161,
+          "fileName": "Complete Lecture Planner.pdf",
+          "fileSize": 87649,
+          "fileType": ".pdf",
+          "keywordsFound": 0,
+          "keywordList": []
+        },
+        "detectedKeywords": []
+      },
+      {
+        "filename": "Krity Singh.png",
+        "timestamp": "2026-05-10T06:13:27.596Z",
+        "analysis": {
+          "threatScore": 10,
+          "threatLevel": "low",
+          "infectedLines": 8,
+          "cleanLines": 364,
+          "fileName": "Krity Singh.png",
+          "fileSize": 129429,
+          "fileType": ".png",
+          "keywordsFound": 0,
+          "keywordList": []
+        },
+        "detectedKeywords": []
+      }
+    ],
+    "failedLogins": []
+  }
+]
