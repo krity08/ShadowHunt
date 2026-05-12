@@ -12,7 +12,6 @@
             padding: 15px;
             margin: 10px 0;
             border-radius: 10px;
-            cursor: pointer;
             transition: all 0.3s;
         }
         .scan-card:hover {
@@ -22,32 +21,35 @@
         .scan-card.high { border-left-color: #ff4444; }
         .scan-card.medium { border-left-color: #ffaa00; }
         .scan-card.low { border-left-color: #00ff88; }
-        .scan-title {
-            font-weight: bold;
-            font-size: 1.1rem;
+        .scan-title { 
+            font-weight: bold; 
+            font-size: 1.1rem; 
             margin-bottom: 8px;
-        }
-        .scan-meta {
-            font-size: 0.8rem;
-            color: #8b9dc3;
             display: flex;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
             flex-wrap: wrap;
+            gap: 10px;
         }
-        .badge {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: bold;
+        .scan-meta { 
+            font-size: 0.8rem; 
+            color: #8b9dc3; 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .badge { 
+            padding: 2px 8px; 
+            border-radius: 10px; 
+            font-size: 0.7rem; 
+            font-weight: bold; 
         }
         .badge.high { background: #ff4444; color: white; }
         .badge.medium { background: #ffaa00; color: #1a1a3e; }
         .badge.low { background: #00ff88; color: #1a1a3e; }
-        .empty-state {
-            text-align: center;
-            padding: 50px;
-            color: #8b9dc3;
-        }
+        .empty-state { text-align: center; padding: 50px; color: #8b9dc3; }
+        
         .btn-upload {
             background: linear-gradient(135deg, #00c6ff, #667eea);
             color: white;
@@ -59,9 +61,19 @@
             margin-bottom: 20px;
             font-size: 1rem;
         }
-        .btn-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4);
+        .btn-report {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 15px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-report:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
         .stats-grid {
             display: grid;
@@ -76,17 +88,10 @@
             text-align: center;
             border: 1px solid rgba(0, 198, 255, 0.2);
         }
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-        }
+        .stat-number { font-size: 2rem; font-weight: bold; }
         .stat-number.high { color: #ff4444; }
-        .stat-number.medium { color: #ffaa00; }
         .stat-number.low { color: #00ff88; }
-        .stat-label {
-            font-size: 0.8rem;
-            color: #8b9dc3;
-        }
+        .stat-label { font-size: 0.8rem; color: #8b9dc3; }
         .threat-circle {
             display: inline-block;
             width: 12px;
@@ -97,6 +102,86 @@
         .threat-circle.high { background: #ff4444; box-shadow: 0 0 5px #ff4444; }
         .threat-circle.medium { background: #ffaa00; box-shadow: 0 0 5px #ffaa00; }
         .threat-circle.low { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
+        
+        /* Modal Styles for Report Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+        .modal-content {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: rgba(15, 25, 55, 0.98);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #00c6ff;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00c6ff;
+        }
+        .close-modal {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .close-modal:hover {
+            background: #cc0000;
+        }
+        .keyword-badge {
+            display: inline-block;
+            background: rgba(255, 68, 68, 0.3);
+            border: 1px solid #ff4444;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 12px;
+        }
+        .infected-line {
+            background: rgba(255, 68, 68, 0.2);
+            border-left: 3px solid #ff4444;
+            padding: 8px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        .clean-line {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 3px solid #00ff88;
+            padding: 8px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        pre {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .btn-print {
+            background: linear-gradient(135deg, #00c6ff, #667eea);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -117,7 +202,6 @@
             <button class="btn-upload" onclick="location.href='/upload'">+ UPLOAD NEW FILE</button>
         </div>
 
-        <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-box">
                 <div class="stat-number" id="totalScans">0</div>
@@ -133,7 +217,6 @@
             </div>
         </div>
 
-        <!-- Clean vs Infected Chart -->
         <div class="analytics-card" style="margin-bottom: 30px;">
             <div class="card-header">
                 <h3>📊 CLEAN VS INFECTED LINES</h3>
@@ -141,15 +224,26 @@
             <canvas id="linesChart" height="100"></canvas>
         </div>
 
-        <!-- Scan History -->
         <div class="analytics-card">
             <div class="card-header">
                 <h3>📋 SCAN HISTORY</h3>
-                <span class="card-badge">Click any scan for detailed report</span>
+                <span class="card-badge">Click "Generate Report" for details</span>
             </div>
             <div id="scansList">
                 <div class="empty-state">No scans yet. Upload a file to get started!</div>
             </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-header">
+                <h2>📋 FORENSIC ANALYSIS REPORT</h2>
+                <button class="close-modal" onclick="closeReport()">✕ CLOSE</button>
+            </div>
+            <div id="reportBody">Loading...</div>
+            <button class="btn-print" onclick="window.print()">🖨️ PRINT / SAVE AS PDF</button>
         </div>
     </div>
 
@@ -190,11 +284,14 @@
                     scansList.innerHTML = '<div class="empty-state">📁 No scans yet. Click "UPLOAD NEW FILE" to get started!</div>';
                 } else {
                     scansList.innerHTML = data.recentScans.map(scan => `
-                        <div class="scan-card ${scan.analysis.threatLevel}" onclick="viewReport('${scan.filename}')">
+                        <div class="scan-card ${scan.analysis.threatLevel}">
                             <div class="scan-title">
-                                <span class="threat-circle ${scan.analysis.threatLevel}"></span>
-                                📄 ${scan.filename}
-                                <span class="badge ${scan.analysis.threatLevel}" style="float: right;">${scan.analysis.threatLevel.toUpperCase()}</span>
+                                <div>
+                                    <span class="threat-circle ${scan.analysis.threatLevel}"></span>
+                                    📄 ${scan.filename}
+                                    <span class="badge ${scan.analysis.threatLevel}" style="margin-left: 10px;">${scan.analysis.threatLevel.toUpperCase()}</span>
+                                </div>
+                                <button class="btn-report" onclick="generateReport('${scan.filename}')">📄 GENERATE REPORT</button>
                             </div>
                             <div class="scan-meta">
                                 <span>🎯 Score: ${scan.analysis.threatScore}/100</span>
@@ -210,8 +307,77 @@
             }
         }
 
-        function viewReport(filename) {
-            window.location.href = `/report/${encodeURIComponent(filename)}`;
+        async function generateReport(filename) {
+            const modal = document.getElementById('reportModal');
+            const reportBody = document.getElementById('reportBody');
+            
+            modal.style.display = 'block';
+            reportBody.innerHTML = '<div style="text-align:center; padding:50px;"><div class="loader"></div><p>Generating report...</p></div>';
+            
+            try {
+                const response = await fetch(`/api/scan-details/${encodeURIComponent(filename)}`);
+                const scan = await response.json();
+                
+                if (!scan) {
+                    reportBody.innerHTML = '<p>❌ Report not found</p>';
+                    return;
+                }
+                
+                const analysis = scan.analysis;
+                const keywords = scan.detectedKeywords || [];
+                const preview = scan.filePreview || [];
+                
+                let threatColor = analysis.threatLevel === 'high' ? '#ff4444' : 
+                                (analysis.threatLevel === 'medium' ? '#ffaa00' : '#00ff88');
+                
+                reportBody.innerHTML = `
+                    <p><strong>File Name:</strong> ${scan.filename}</p>
+                    <p><strong>Analysis Date:</strong> ${new Date(scan.timestamp).toLocaleString()}</p>
+                    <p><strong>Threat Level:</strong> <span style="color: ${threatColor}; font-weight: bold; font-size: 1.2rem;">${analysis.threatLevel.toUpperCase()}</span></p>
+                    <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
+                    <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
+                    
+                    <h3 style="margin-top: 20px;">🔍 Detected Threat Keywords</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No suspicious keywords detected</p>'}
+                    </div>
+                    
+                    <h3>📝 File Content Analysis</h3>
+                    <pre>
+${preview.map(line => {
+    const isInfected = line.toLowerCase().includes('ransomware') || 
+                       line.toLowerCase().includes('backdoor') ||
+                       line.toLowerCase().includes('trojan') ||
+                       line.toLowerCase().includes('keylogger') ||
+                       line.toLowerCase().includes('eval') ||
+                       line.toLowerCase().includes('exec') ||
+                       line.toLowerCase().includes('base64');
+    return (isInfected ? '❌ ' : '✅ ') + line;
+}).join('\n')}
+                    </pre>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        <h4>📊 Summary</h4>
+                        <p>Total Threats Found: ${keywords.length}</p>
+                        <p>Risk Assessment: ${analysis.threatScore >= 70 ? 'CRITICAL - Immediate action required' : 
+                                           (analysis.threatScore >= 35 ? 'WARNING - Review recommended' : 'SAFE - No immediate action needed')}</p>
+                    </div>
+                `;
+            } catch (error) {
+                reportBody.innerHTML = `<p>❌ Error loading report: ${error.message}</p>`;
+            }
+        }
+
+        function closeReport() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('reportModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         }
 
         loadDashboard();
