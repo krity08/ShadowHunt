@@ -89,12 +89,12 @@
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
         }
-        .info-text {
+        .no-preview {
             background: rgba(0, 198, 255, 0.1);
-            padding: 15px;
+            padding: 30px;
             border-radius: 8px;
-            margin: 15px 0;
             text-align: center;
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -135,7 +135,7 @@
                         <div class="card-header">
                             <h3>❌ Report not found</h3>
                         </div>
-                        <p>No scan found with filename: ${filename}</p>
+                        <p>No scan found</p>
                         <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
                     `;
                     return;
@@ -149,50 +149,55 @@
                 else if (analysis.threatLevel === 'medium') threatClass = 'threat-medium';
                 else threatClass = 'threat-low';
                 
+                let threatText = '';
+                if (analysis.threatLevel === 'high') threatText = '🔴 HIGH - Critical threat detected';
+                else if (analysis.threatLevel === 'medium') threatText = '🟡 MEDIUM - Suspicious patterns found';
+                else threatText = '🟢 LOW - No immediate threat';
+                
                 document.getElementById('reportContent').innerHTML = `
                     <div class="card-header">
-                        <h3>📋 FORENSIC ANALYSIS REPORT</h3>
+                        <h3>📋 SHADOWHUNT FORENSIC REPORT</h3>
                         <span style="font-size: 0.8rem;">${new Date(scan.timestamp).toLocaleString()}</span>
                     </div>
                     
-                    <p><strong>File Name:</strong> ${scan.filename}</p>
-                    <p><strong>File Type:</strong> ${analysis.fileType || 'Unknown'}</p>
-                    <p><strong>File Size:</strong> ${(analysis.fileSize / 1024).toFixed(2)} KB</p>
-                    <p><strong>Threat Level:</strong> <span class="${threatClass}">${analysis.threatLevel.toUpperCase()}</span></p>
-                    <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
-                    <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
-                    
-                    <div class="info-text">
-                        🔍 ShadowHunt has analyzed this file for malware signatures, suspicious patterns, and steganography.
+                    <div class="no-preview">
+                        <p style="font-size: 3rem;">📄</p>
+                        <p><strong>File:</strong> ${scan.filename}</p>
+                        <p><strong>Size:</strong> ${(analysis.fileSize / 1024).toFixed(2)} KB</p>
+                        <p><strong>Type:</strong> ${analysis.fileType || 'Unknown'}</p>
                     </div>
                     
-                    <h3 style="margin-top: 20px;">🔍 Detected Threats</h3>
+                    <p><strong>Threat Assessment:</strong> <span class="${threatClass}">${analysis.threatLevel.toUpperCase()}</span></p>
+                    <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
+                    <p><strong>Analysis Result:</strong> ${threatText}</p>
+                    <p><strong>Infected Lines:</strong> ${analysis.infectedLines}</p>
+                    <p><strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
+                    
+                    <h3 style="margin-top: 20px;">⚠️ Detected Indicators</h3>
                     <div style="margin-bottom: 20px;">
-                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No threats detected</p>'}
+                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword}</span>`).join('') : '<p>✅ No suspicious indicators found</p>'}
                     </div>
                     
                     <div class="summary-box">
-                        <h4>📊 Summary</h4>
-                        <p>• Total Threats Found: ${keywords.length}</p>
-                        <p>• Threat Score: ${analysis.threatScore}/100</p>
-                        <p>• Risk Assessment: ${analysis.threatScore >= 70 ? '🔴 CRITICAL - Immediate action required' : 
-                                           (analysis.threatScore >= 35 ? '🟡 WARNING - Review recommended' : '🟢 SAFE - No immediate action needed')}</p>
+                        <h4>📋 Case Summary</h4>
+                        <p>• File analyzed by ShadowHunt AI Engine</p>
+                        <p>• Total indicators: ${keywords.length}</p>
+                        <p>• Verdict: ${analysis.threatScore >= 70 ? 'MALICIOUS' : (analysis.threatScore >= 35 ? 'SUSPICIOUS' : 'CLEAN')}</p>
                     </div>
                     
                     <div class="btn-group">
-                        <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
-                        <button class="btn-secondary" onclick="location.href='/upload'">📤 Upload New File</button>
-                        <button class="btn-primary" onclick="window.print()">🖨️ PRINT / SAVE PDF</button>
+                        <button class="btn-primary" onclick="location.href='/dashboard'">← Dashboard</button>
+                        <button class="btn-secondary" onclick="location.href='/upload'">📤 Upload</button>
+                        <button class="btn-primary" onclick="window.print()">🖨️ Print PDF</button>
                     </div>
                 `;
             } catch (error) {
-                console.error('Error:', error);
                 document.getElementById('reportContent').innerHTML = `
                     <div class="card-header">
-                        <h3>❌ Error loading report</h3>
+                        <h3>❌ Error</h3>
                     </div>
                     <p>${error.message}</p>
-                    <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
+                    <button class="btn-primary" onclick="location.href='/dashboard'">← Back</button>
                 `;
             }
         }
