@@ -3,10 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>Report - ShadowHunt</title>
-    <link rel="stylesheet" href="/css/style.css">
     <style>
-        .infected-line {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0d1117 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .navbar {
+            background: rgba(5, 10, 30, 0.95);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #00c6ff;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #00c6ff; cursor: pointer; }
+        .nav-links a {
+            color: #e0e0e0;
+            text-decoration: none;
+            margin-left: 2rem;
+        }
+        .nav-links a:hover { color: #00c6ff; }
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .report-card {
+            background: rgba(15, 25, 55, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #00c6ff;
+        }
+        .threat-high { color: #ff4444; font-size: 1.5rem; font-weight: bold; }
+        .threat-medium { color: #ffaa00; font-size: 1.5rem; font-weight: bold; }
+        .threat-low { color: #00ff88; font-size: 1.5rem; font-weight: bold; }
+        .keyword-badge {
+            display: inline-block;
             background: rgba(255, 68, 68, 0.3);
+            border: 1px solid #ff4444;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 12px;
+        }
+        .infected-line {
+            background: rgba(255, 68, 68, 0.2);
             border-left: 3px solid #ff4444;
             padding: 8px;
             margin: 5px 0;
@@ -19,14 +67,6 @@
             margin: 5px 0;
             font-family: monospace;
         }
-        .keyword-badge {
-            display: inline-block;
-            background: #ff4444;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin: 5px;
-            font-size: 12px;
-        }
         pre {
             background: rgba(0,0,0,0.5);
             padding: 15px;
@@ -34,12 +74,41 @@
             overflow-x: auto;
             max-height: 400px;
         }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00c6ff, #667eea);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #00c6ff;
+            color: #00c6ff;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 198, 255, 0.3);
+        }
+        .card-header h3 { color: #00c6ff; }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo logo-clickable" onclick="logout()">🔍 SHADOWHUNT</div>
+            <div class="logo" onclick="logout()">🔍 SHADOWHUNT</div>
             <div class="nav-links">
                 <a href="/dashboard">DASHBOARD</a>
                 <a href="/upload">UPLOAD</a>
@@ -48,8 +117,8 @@
         </div>
     </nav>
 
-    <div class="dashboard-container">
-        <div class="analytics-card" id="reportContent">
+    <div class="container">
+        <div class="report-card" id="reportContent">
             <div class="card-header">
                 <h3>📋 Loading report...</h3>
             </div>
@@ -62,52 +131,89 @@
         }
 
         async function loadReport() {
-            const filename = window.location.pathname.split('/').pop();
-            const response = await fetch(`/api/scan-details/${encodeURIComponent(filename)}`);
-            const scan = await response.json();
-            
-            if (!scan) {
-                document.getElementById('reportContent').innerHTML = '<h3>Report not found</h3><a href="/dashboard">Back to Dashboard</a>';
-                return;
-            }
-            
-            const analysis = scan.analysis;
-            const keywords = scan.detectedKeywords || [];
-            const preview = scan.filePreview || [];
-            
-            document.getElementById('reportContent').innerHTML = `
-                <div class="card-header">
-                    <h3>📋 FORENSIC ANALYSIS REPORT</h3>
-                    <span class="card-badge">${new Date(scan.timestamp).toLocaleString()}</span>
-                </div>
+            try {
+                // Get filename from URL
+                const filename = window.location.pathname.split('/').pop();
+                console.log('Loading report for:', filename);
                 
-                <p><strong>File:</strong> ${scan.filename}</p>
-                <p><strong>Threat Level:</strong> <span style="color: ${analysis.threatLevel === 'high' ? '#ff4444' : (analysis.threatLevel === 'medium' ? '#ffaa00' : '#00ff88')}; font-size: 1.3rem; font-weight: bold;">${analysis.threatLevel.toUpperCase()}</span></p>
-                <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
-                <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
+                const response = await fetch(`/api/scan-details/${encodeURIComponent(filename)}`);
+                const scan = await response.json();
                 
-                <h3 style="margin-top: 20px;">🔍 Detected Threat Keywords</h3>
-                <div style="margin-bottom: 20px;">
-                    ${keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') || '<p>✅ No threats detected</p>'}
-                </div>
+                console.log('Scan data:', scan);
                 
-                <h3>📝 File Content Analysis</h3>
-                <pre>
+                if (!scan) {
+                    document.getElementById('reportContent').innerHTML = `
+                        <div class="card-header">
+                            <h3>❌ Report not found</h3>
+                        </div>
+                        <p>No scan found with filename: ${filename}</p>
+                        <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
+                    `;
+                    return;
+                }
+                
+                const analysis = scan.analysis;
+                const keywords = scan.detectedKeywords || [];
+                const preview = scan.filePreview || [];
+                
+                let threatClass = '';
+                let threatColor = '';
+                if (analysis.threatLevel === 'high') {
+                    threatClass = 'threat-high';
+                    threatColor = '#ff4444';
+                } else if (analysis.threatLevel === 'medium') {
+                    threatClass = 'threat-medium';
+                    threatColor = '#ffaa00';
+                } else {
+                    threatClass = 'threat-low';
+                    threatColor = '#00ff88';
+                }
+                
+                document.getElementById('reportContent').innerHTML = `
+                    <div class="card-header">
+                        <h3>📋 FORENSIC ANALYSIS REPORT</h3>
+                        <span style="font-size: 0.8rem;">${new Date(scan.timestamp).toLocaleString()}</span>
+                    </div>
+                    
+                    <p><strong>File:</strong> ${scan.filename}</p>
+                    <p><strong>Threat Level:</strong> <span class="${threatClass}">${analysis.threatLevel.toUpperCase()}</span></p>
+                    <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
+                    <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
+                    
+                    <h3 style="margin-top: 20px;">🔍 Detected Threat Keywords</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No threats detected</p>'}
+                    </div>
+                    
+                    <h3>📝 File Content Analysis</h3>
+                    <pre>
 ${preview.map(line => {
     const isInfected = line.toLowerCase().includes('ransomware') || 
                        line.toLowerCase().includes('backdoor') ||
+                       line.toLowerCase().includes('trojan') ||
+                       line.toLowerCase().includes('keylogger') ||
                        line.toLowerCase().includes('eval') ||
                        line.toLowerCase().includes('exec') ||
                        line.toLowerCase().includes('base64');
     return (isInfected ? '❌ ' : '✅ ') + line;
 }).join('\n')}
-                </pre>
-                
-                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    </pre>
+                    
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
+                        <button class="btn-secondary" onclick="location.href='/upload'">📤 Upload New File</button>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading report:', error);
+                document.getElementById('reportContent').innerHTML = `
+                    <div class="card-header">
+                        <h3>❌ Error loading report</h3>
+                    </div>
+                    <p>${error.message}</p>
                     <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
-                    <button class="btn-secondary" onclick="location.href='/upload'">📤 Upload New File</button>
-                </div>
-            `;
+                `;
+            }
         }
         
         loadReport();
