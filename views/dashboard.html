@@ -2,25 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - ShadowHunt</title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .logo-clickable {
+        .scan-card {
+            background: rgba(15, 25, 55, 0.9);
+            border-left: 4px solid #00c6ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s;
         }
-        .logo-clickable:hover {
-            opacity: 0.8;
-            transform: scale(1.05);
+        .scan-card:hover {
+            transform: translateX(5px);
+            background: rgba(0, 198, 255, 0.1);
         }
+        .scan-card.high { border-left-color: #ff4444; }
+        .scan-card.medium { border-left-color: #ffaa00; }
+        .scan-card.low { border-left-color: #00ff88; }
+        .scan-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .scan-meta {
+            font-size: 0.8rem;
+            color: #8b9dc3;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .badge.high { background: #ff4444; color: white; }
+        .badge.medium { background: #ffaa00; color: #1a1a3e; }
+        .badge.low { background: #00ff88; color: #1a1a3e; }
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #8b9dc3;
+        }
+        .btn-upload {
+            background: linear-gradient(135deg, #00c6ff, #667eea);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 198, 255, 0.4);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: rgba(10, 14, 39, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 198, 255, 0.2);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-number.high { color: #ff4444; }
+        .stat-number.medium { color: #ffaa00; }
+        .stat-number.low { color: #00ff88; }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #8b9dc3;
+        }
+        .threat-circle {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .threat-circle.high { background: #ff4444; box-shadow: 0 0 5px #ff4444; }
+        .threat-circle.medium { background: #ffaa00; box-shadow: 0 0 5px #ffaa00; }
+        .threat-circle.low { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo logo-clickable" onclick="logout()">🔍 SHADOWHUNT <span>// FORENSIC SUITE</span></div>
+            <div class="logo logo-clickable" onclick="logout()">🔍 SHADOWHUNT</div>
             <div class="nav-links">
                 <a href="/dashboard">DASHBOARD</a>
                 <a href="/upload">UPLOAD</a>
@@ -31,201 +113,100 @@
 
     <div class="dashboard-container">
         <div class="dashboard-header">
-            <div class="header-left">
-                <h1>⚡ INCIDENT DASHBOARD</h1>
-                <p class="tagline">"Evidence never dies" | Real-time threat intelligence</p>
+            <h1>⚡ INCIDENT DASHBOARD</h1>
+            <button class="btn-upload" onclick="location.href='/upload'">+ UPLOAD NEW FILE</button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="totalScans">0</div>
+                <div class="stat-label">Total Scans</div>
             </div>
-            <div class="header-right">
-                <div class="live-badge">
-                    <span class="pulse"></span> LIVE MONITORING
-                </div>
+            <div class="stat-box">
+                <div class="stat-number high" id="highCount">0</div>
+                <div class="stat-label">High Severity</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number low" id="lowCount">0</div>
+                <div class="stat-label">Clean Files</div>
             </div>
         </div>
 
-        <div class="stats-grid-main">
-            <div class="stat-card-main total-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-content">
-                    <span class="stat-label">TOTAL INCIDENTS</span>
-                    <span class="stat-value" id="totalIncidents">0</span>
-                </div>
+        <!-- Clean vs Infected Chart -->
+        <div class="analytics-card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <h3>📊 CLEAN VS INFECTED LINES</h3>
             </div>
-            <div class="stat-card-main high-card">
-                <div class="stat-icon">🔴</div>
-                <div class="stat-content">
-                    <span class="stat-label">HIGH SEVERITY</span>
-                    <span class="stat-value" id="highSeverity">0</span>
-                </div>
-            </div>
-            <div class="stat-card-main medium-card">
-                <div class="stat-icon">🟡</div>
-                <div class="stat-content">
-                    <span class="stat-label">MEDIUM SEVERITY</span>
-                    <span class="stat-value" id="mediumSeverity">0</span>
-                </div>
-            </div>
-            <div class="stat-card-main low-card">
-                <div class="stat-icon">🟢</div>
-                <div class="stat-content">
-                    <span class="stat-label">LOW SEVERITY</span>
-                    <span class="stat-value" id="lowSeverity">0</span>
-                </div>
-            </div>
+            <canvas id="linesChart" height="100"></canvas>
         </div>
 
-        <div class="analytics-grid">
-            <div class="analytics-card chart-card">
-                <div class="card-header">
-                    <h3>📈 THREAT DISTRIBUTION</h3>
-                    <span class="card-badge">Last 30 days</span>
-                </div>
-                <canvas id="threatChart"></canvas>
+        <!-- Scan History -->
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3>📋 SCAN HISTORY</h3>
+                <span class="card-badge">Click any scan for detailed report</span>
             </div>
-            <div class="analytics-card lines-card">
-                <div class="card-header">
-                    <h3>🔍 CODE ANALYSIS</h3>
-                    <span class="card-badge">Lines of Code</span>
-                </div>
-                <div class="lines-stats">
-                    <div class="line-stat clean">
-                        <span class="line-label">CLEAN LINES</span>
-                        <span class="line-value" id="totalClean">0</span>
-                        <div class="line-progress">
-                            <div class="progress-fill clean-fill" id="cleanProgress" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="line-stat infected">
-                        <span class="line-label">INFECTED LINES</span>
-                        <span class="line-value" id="totalInfected">0</span>
-                        <div class="line-progress">
-                            <div class="progress-fill infected-fill" id="infectedProgress" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="threat-level-indicator" id="threatLevelCard">
-                    <span class="threat-label">CURRENT THREAT LEVEL</span>
-                    <span class="threat-value" id="threatLevelValue">SCANNING...</span>
-                </div>
+            <div id="scansList">
+                <div class="empty-state">No scans yet. Upload a file to get started!</div>
             </div>
-        </div>
-
-        <div class="logs-grid">
-            <div class="logs-card">
-                <div class="card-header">
-                    <h3>📋 RECENT INCIDENTS</h3>
-                    <span class="card-badge">Timeline</span>
-                </div>
-                <div class="scans-list" id="recentScans">
-                    <div class="empty-state">No incidents detected yet</div>
-                </div>
-            </div>
-            <div class="logs-card">
-                <div class="card-header">
-                    <h3>⚠️ SUSPICIOUS ACTIVITY</h3>
-                    <span class="card-badge">Failed Logins</span>
-                </div>
-                <div class="logins-list" id="failedLogins">
-                    <div class="empty-state">No suspicious activity</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard-footer">
-            <span class="timestamp" id="timestamp"></span>
-            <span class="system-status">🟢 ALL SYSTEMS OPERATIONAL</span>
         </div>
     </div>
 
     <script>
         function logout() {
-            if(confirm('Exit ShadowHunt? You will be redirected to homepage.')) {
-                window.location.href = '/logout';
-            }
+            if(confirm('Exit ShadowHunt?')) window.location.href = '/logout';
         }
 
-        async function loadDashboardData() {
+        async function loadDashboard() {
             try {
-                const response = await fetch('/api/dashboard-data');
-                const data = await response.json();
+                const res = await fetch('/api/dashboard-data');
+                const data = await res.json();
                 
-                document.getElementById('totalIncidents').textContent = data.totalScans;
-                document.getElementById('highSeverity').textContent = data.highThreatCount;
-                document.getElementById('mediumSeverity').textContent = data.mediumThreatCount || 0;
-                document.getElementById('lowSeverity').textContent = data.lowThreatCount;
+                document.getElementById('totalScans').textContent = data.totalScans;
+                document.getElementById('highCount').textContent = data.highThreatCount;
+                document.getElementById('lowCount').textContent = data.totalScans - data.highThreatCount;
                 
-                document.getElementById('totalClean').textContent = data.totalClean;
-                document.getElementById('totalInfected').textContent = data.totalInfected;
-                
-                const total = data.totalClean + data.totalInfected;
-                const cleanPercent = total > 0 ? (data.totalClean / total) * 100 : 0;
-                const infectedPercent = total > 0 ? (data.totalInfected / total) * 100 : 0;
-                
-                document.getElementById('cleanProgress').style.width = cleanPercent + '%';
-                document.getElementById('infectedProgress').style.width = infectedPercent + '%';
-                
-                const threatLevelValue = document.getElementById('threatLevelValue');
-                if (data.threatSeverity === 'high') {
-                    threatLevelValue.innerHTML = '🔴 CRITICAL - IMMEDIATE ACTION REQUIRED';
-                    threatLevelValue.style.color = '#ff4444';
-                } else {
-                    threatLevelValue.innerHTML = '🟢 NORMAL - MONITORING ACTIVE';
-                    threatLevelValue.style.color = '#00ff88';
-                }
-                
-                const ctx = document.getElementById('threatChart').getContext('2d');
+                const ctx = document.getElementById('linesChart').getContext('2d');
                 new Chart(ctx, {
-                    type: 'doughnut',
+                    type: 'bar',
                     data: {
-                        labels: ['High Severity', 'Medium Severity', 'Low Severity'],
+                        labels: ['Clean Lines', 'Infected Lines'],
                         datasets: [{
-                            data: [data.highThreatCount, data.mediumThreatCount || 0, data.lowThreatCount],
-                            backgroundColor: ['#ff4444', '#ffaa00', '#00ff88'],
-                            borderColor: '#0a0c15',
-                            borderWidth: 2
+                            data: [data.totalClean, data.totalInfected],
+                            backgroundColor: ['#00ff88', '#ff4444'],
+                            borderRadius: 10
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { color: '#e0e0e0' } }
-                        }
+                        plugins: { legend: { labels: { color: '#e0e0e0' } } },
+                        scales: { y: { beginAtZero: true, ticks: { color: '#e0e0e0' } } }
                     }
                 });
                 
-                const recentScansDiv = document.getElementById('recentScans');
+                const scansList = document.getElementById('scansList');
                 if (data.recentScans.length === 0) {
-                    recentScansDiv.innerHTML = '<div class="empty-state">No incidents detected yet</div>';
+                    scansList.innerHTML = '<div class="empty-state">📁 No scans yet. Click "UPLOAD NEW FILE" to get started!</div>';
                 } else {
-                    recentScansDiv.innerHTML = data.recentScans.map(scan => {
-                        let threatClass = scan.analysis.threatLevel === 'high' ? 'scan-threat-high' : 
-                                         (scan.analysis.threatLevel === 'medium' ? 'scan-threat-medium' : 'scan-threat-low');
-                        return `
-                            <div class="scan-item ${threatClass}" onclick="viewReport('${scan.filename}')">
-                                <div class="scan-filename">📄 ${scan.filename}</div>
-                                <div>🎯 Threat: ${scan.analysis.threatLevel.toUpperCase()} | Score: ${scan.analysis.threatScore}/100</div>
-                                <div>🔍 Infected Lines: ${scan.analysis.infectedLines} | Clean: ${scan.analysis.cleanLines}</div>
-                                <div>⏱️ ${new Date(scan.timestamp).toLocaleString()}</div>
+                    scansList.innerHTML = data.recentScans.map(scan => `
+                        <div class="scan-card ${scan.analysis.threatLevel}" onclick="viewReport('${scan.filename}')">
+                            <div class="scan-title">
+                                <span class="threat-circle ${scan.analysis.threatLevel}"></span>
+                                📄 ${scan.filename}
+                                <span class="badge ${scan.analysis.threatLevel}" style="float: right;">${scan.analysis.threatLevel.toUpperCase()}</span>
                             </div>
-                        `;
-                    }).join('');
-                }
-                
-                const failedLoginsDiv = document.getElementById('failedLogins');
-                if (data.failedLogins.length === 0) {
-                    failedLoginsDiv.innerHTML = '<div class="empty-state">No suspicious activity detected</div>';
-                } else {
-                    failedLoginsDiv.innerHTML = data.failedLogins.map(login => `
-                        <div class="login-item">
-                            <div>⚠️ Failed login attempt</div>
-                            <div>👤 Username: ${login.username}</div>
-                            <div>⏱️ ${new Date(login.timestamp).toLocaleString()}</div>
+                            <div class="scan-meta">
+                                <span>🎯 Score: ${scan.analysis.threatScore}/100</span>
+                                <span>🔍 Infected: ${scan.analysis.infectedLines} lines</span>
+                                <span>✅ Clean: ${scan.analysis.cleanLines} lines</span>
+                                <span>⏱️ ${new Date(scan.timestamp).toLocaleString()}</span>
+                            </div>
                         </div>
                     `).join('');
                 }
-                
-                document.getElementById('timestamp').innerHTML = `🕐 LAST UPDATE: ${new Date().toLocaleString()}`;
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -233,8 +214,8 @@
             window.location.href = `/report/${encodeURIComponent(filename)}`;
         }
 
-        loadDashboardData();
-        setInterval(loadDashboardData, 10000);
+        loadDashboard();
+        setInterval(loadDashboard, 10000);
     </script>
 </body>
 </html>

@@ -2,10 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload - ShadowHunt</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
+        .drop-zone {
+            border: 2px dashed #00c6ff;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .drop-zone.drag-over {
+            background: rgba(0, 198, 255, 0.1);
+            border-color: #00ff88;
+        }
         .loading-overlay {
             display: none;
             position: fixed;
@@ -13,7 +25,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             z-index: 9999;
             justify-content: center;
             align-items: center;
@@ -35,22 +47,12 @@
             margin-top: 20px;
             color: #00c6ff;
             font-size: 1.2rem;
-            font-family: monospace;
-        }
-        .loading-dots::after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
         }
         .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
             display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
         }
         .result-high { background: rgba(255, 68, 68, 0.2); border: 1px solid #ff4444; }
         .result-medium { background: rgba(255, 170, 0, 0.2); border: 1px solid #ffaa00; }
@@ -62,19 +64,26 @@
             margin: 5px 0;
             font-family: monospace;
         }
-        .clean-line {
-            background: rgba(0, 255, 136, 0.1);
-            border-left: 3px solid #00ff88;
-            padding: 5px;
-            margin: 5px 0;
-            font-family: monospace;
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #00c6ff;
+            color: #00c6ff;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo logo-clickable" onclick="logout()">🔍 SHADOWHUNT <span>// FORENSIC SUITE</span></div>
+            <div class="logo logo-clickable" onclick="logout()">🔍 SHADOWHUNT</div>
             <div class="nav-links">
                 <a href="/dashboard">DASHBOARD</a>
                 <a href="/upload">UPLOAD</a>
@@ -86,54 +95,74 @@
     <div class="upload-container">
         <div class="upload-card">
             <h2>📁 Upload File for Threat Analysis</h2>
-            <form id="uploadForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label>Select File:</label>
-                    <input type="file" name="file" id="fileInput" required>
-                </div>
-                <button type="submit" class="btn-primary">🔍 Analyze Threat</button>
-            </form>
+            
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <p>📂 Drag & drop your file here</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">or click to browse</p>
+                <input type="file" id="fileInput" style="display: none;">
+            </div>
+            
+            <button class="btn-primary" id="analyzeBtn" style="width: 100%;" disabled>🔍 Analyze Threat</button>
+            
             <div class="info-box">
-                <h4>Supported File Types:</h4>
-                <p>📄 Text files (.txt, .log) - Scans for malware keywords</p>
-                <p>🖼️ Images (JPG, PNG) - Checks for LSB steganography</p>
-                <p>⚙️ Executables (.exe, .bat, .sh) - Malware detection</p>
-                <p>📑 Scripts (.js, .vbs, .ps1) - Suspicious code analysis</p>
+                <h4>📋 Supported File Types:</h4>
+                <p>📄 Text files (.txt, .log, .js, .html) - Scans for malware keywords</p>
+                <p>🖼️ Images (.jpg, .png) - Steganography detection</p>
+                <p>⚙️ Executables (.exe, .bat) - Malware signatures</p>
             </div>
         </div>
     </div>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loader"></div>
-        <div class="loading-text">Analyzing file for threats<span class="loading-dots"></span></div>
-        <div style="margin-top: 10px; font-size: 0.8rem; color: #8b9dc3;">Scanning for malware signatures...</div>
+        <div class="loading-text">🔍 Scanning for threats...</div>
+        <div style="margin-top: 10px; font-size: 0.8rem;">Checking malware signatures, steganography, and suspicious patterns</div>
     </div>
 
     <div id="resultBox" class="result-box" style="display: none;"></div>
 
     <script>
         function logout() {
-            if(confirm('Exit ShadowHunt? You will be redirected to homepage.')) {
-                window.location.href = '/logout';
-            }
+            if(confirm('Exit ShadowHunt?')) window.location.href = '/logout';
         }
 
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        let selectedFile = null;
+
+        dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            selectedFile = e.dataTransfer.files[0];
+            fileInput.files = e.dataTransfer.files;
+            analyzeBtn.disabled = false;
+            dropZone.style.borderColor = '#00ff88';
+        });
+
+        fileInput.addEventListener('change', () => {
+            selectedFile = fileInput.files[0];
+            analyzeBtn.disabled = !selectedFile;
+            if(selectedFile) dropZone.style.borderColor = '#00ff88';
+        });
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
             
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('Please select a file!');
-                return;
-            }
-            
-            // Show loading animation
             document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('resultBox').style.display = 'none';
             
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', selectedFile);
             
             try {
                 const response = await fetch('/upload-analysis', {
@@ -142,64 +171,41 @@
                 });
                 
                 const result = await response.json();
-                
-                // Hide loading
                 document.getElementById('loadingOverlay').style.display = 'none';
                 
-                // Show result box
                 const resultBox = document.getElementById('resultBox');
                 resultBox.style.display = 'block';
                 resultBox.className = `result-box result-${result.threatLevel}`;
                 
-                // Display detailed report
                 resultBox.innerHTML = `
-                    <h3>📊 Analysis Report for: ${result.fileName}</h3>
+                    <h3>📊 Analysis Complete!</h3>
+                    <p><strong>File:</strong> ${result.fileName}</p>
                     <p><strong>Threat Level:</strong> <span style="color: ${result.threatLevel === 'high' ? '#ff4444' : (result.threatLevel === 'medium' ? '#ffaa00' : '#00ff88')}">${result.threatLevel.toUpperCase()}</span></p>
                     <p><strong>Threat Score:</strong> ${result.threatScore}/100</p>
-                    <p><strong>File Type:</strong> ${result.fileType}</p>
-                    <p><strong>File Size:</strong> ${(result.fileSize / 1024).toFixed(2)} KB</p>
                     <p><strong>Infected Lines:</strong> ${result.infectedLines} | <strong>Clean Lines:</strong> ${result.cleanLines}</p>
                     
                     <h4>🔍 Detected Keywords:</h4>
-                    <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.9rem;">
+                    <div style="max-height: 200px; overflow-y: auto;">
                         ${result.keywordsFound > 0 ? result.keywordList.map(k => 
-                            `<div class="infected-line">⚠️ Found: "${k.keyword}" - Severity: ${k.severity}</div>`
-                        ).join('') : '<div class="clean-line">✅ No suspicious keywords detected</div>'}
+                            `<div class="infected-line">⚠️ "${k.keyword}" - Severity: ${k.severity}</div>`
+                        ).join('') : '<div class="infected-line" style="background: rgba(0,255,136,0.1); border-left-color: #00ff88;">✅ No suspicious keywords detected</div>'}
                     </div>
                     
-                    <h4 style="margin-top: 15px;">📝 Code Analysis Preview:</h4>
-                    <div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.8rem;">
-                        ${result.codePreview ? result.codePreview.map(line => {
-                            if (line.includes('ransomware') || line.includes('backdoor') || line.includes('eval') || line.includes('base64')) {
-                                return `<div class="infected-line">❌ ${escapeHtml(line)}</div>`;
-                            } else {
-                                return `<div class="clean-line">✅ ${escapeHtml(line)}</div>`;
-                            }
-                        }).join('') : '<div class="clean-line">No preview available</div>'}
-                    </div>
-                    
-                    <div style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button onclick="location.href='/dashboard'" class="btn-primary">Go to Dashboard</button>
-                        <button onclick="location.href='/upload'" class="btn-secondary">Analyze Another File</button>
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="location.href='/dashboard'">📊 Go to Dashboard</button>
+                        <button class="btn-secondary" onclick="location.href='/upload'">📤 Analyze Another</button>
                     </div>
                 `;
                 
-                // Auto redirect to dashboard after 10 seconds
                 setTimeout(() => {
                     window.location.href = '/dashboard';
-                }, 10000);
+                }, 8000);
                 
             } catch (error) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 alert('Error analyzing file. Please try again.');
             }
         });
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
     </script>
 </body>
 </html>
