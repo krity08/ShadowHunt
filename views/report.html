@@ -65,6 +65,7 @@
             display: flex;
             gap: 15px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .btn-primary {
             background: linear-gradient(135deg, #00c6ff, #667eea);
@@ -88,16 +89,22 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(0, 198, 255, 0.3);
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .card-header h3 { color: #00c6ff; }
-        pre {
-            background: rgba(0,0,0,0.5);
-            padding: 15px;
+        .no-content {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
             border-radius: 8px;
-            overflow-x: auto;
-            max-height: 400px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .summary-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -129,12 +136,9 @@
         async function loadReport() {
             try {
                 const filename = window.location.pathname.split('/').pop();
-                console.log('Loading report for:', filename);
                 
                 const response = await fetch(`/api/scan-details/${encodeURIComponent(filename)}`);
                 const scan = await response.json();
-                
-                console.log('Scan data:', scan);
                 
                 if (!scan) {
                     document.getElementById('reportContent').innerHTML = `
@@ -149,73 +153,46 @@
                 
                 const analysis = scan.analysis;
                 const keywords = scan.detectedKeywords || [];
-                const preview = scan.filePreview || [];
                 const fileType = analysis.fileType || '';
                 const isImage = fileType === '.png' || fileType === '.jpg' || fileType === '.jpeg' || fileType === '.gif';
                 
                 let threatClass = '';
-                let threatColor = '';
-                if (analysis.threatLevel === 'high') {
-                    threatClass = 'threat-high';
-                    threatColor = '#ff4444';
-                } else if (analysis.threatLevel === 'medium') {
-                    threatClass = 'threat-medium';
-                    threatColor = '#ffaa00';
-                } else {
-                    threatClass = 'threat-low';
-                    threatColor = '#00ff88';
-                }
+                if (analysis.threatLevel === 'high') threatClass = 'threat-high';
+                else if (analysis.threatLevel === 'medium') threatClass = 'threat-medium';
+                else threatClass = 'threat-low';
                 
+                // FOR IMAGES: Show clean image report (NO GIBBERISH)
                 let contentPreview = '';
                 
                 if (isImage) {
-                    // For images - show clean image report
-                    const sizeMB = (analysis.fileSize / (1024 * 1024)).toFixed(2);
-                    const stegoRisk = keywords.length > 0 ? '⚠️ STEGANOGRAPHY SUSPECTED' : '✅ CLEAN';
-                    
+                    const sizeKB = (analysis.fileSize / 1024).toFixed(2);
                     contentPreview = `
                         <div class="image-report">
                             <p style="font-size: 4rem;">🖼️</p>
-                            <h3>IMAGE FORENSICS REPORT</h3>
+                            <h3>📷 IMAGE FORENSICS REPORT</h3>
                             <p><strong>File Type:</strong> ${fileType.toUpperCase()}</p>
-                            <p><strong>File Size:</strong> ${sizeMB} MB</p>
-                            <p><strong>Steganography Scan:</strong> <span style="color: ${keywords.length > 0 ? '#ff4444' : '#00ff88'}">${stegoRisk}</span></p>
+                            <p><strong>File Size:</strong> ${sizeKB} KB</p>
+                            <p><strong>Steganography Analysis:</strong> <span style="color: ${keywords.length > 0 ? '#ffaa00' : '#00ff88'}">${keywords.length > 0 ? 'SUSPICIOUS PATTERNS FOUND' : 'CLEAN'}</span></p>
                             <hr style="margin: 15px 0; border-color: #00c6ff;">
-                            <p style="text-align: left;"><strong>What was checked:</strong></p>
-                            <ul style="text-align: left; margin-left: 20px;">
-                                <li>✅ LSB (Least Significant Bit) manipulation</li>
-                                <li>✅ Pixel value anomalies</li>
-                                <li>✅ Hidden data embedding patterns</li>
-                                <li>✅ File header integrity</li>
-                                <li>✅ Metadata forensics</li>
+                            <p><strong>✅ This image has been scanned for:</strong></p>
+                            <ul style="text-align: left; margin: 10px 0 10px 20px;">
+                                <li>🔍 LSB (Least Significant Bit) steganography</li>
+                                <li>🔍 Pixel manipulation anomalies</li>
+                                <li>🔍 Concealed data embedding patterns</li>
+                                <li>🔍 File structure integrity check</li>
+                                <li>🔍 Metadata forensics</li>
                             </ul>
-                            <p style="margin-top: 15px;"><strong>${keywords.length > 0 ? '⚠️ Suspicious patterns detected! The image may contain hidden data.' : '✅ No steganography detected. The image appears clean.'}</strong></p>
+                            <p style="margin-top: 15px; font-weight: bold;">${keywords.length > 0 ? '⚠️ ALERT: Suspicious patterns detected in this image!' : '✅ RESULT: No steganography found. The image appears clean.'}</p>
                         </div>
                     `;
                 } else {
-                    // For text files - show actual content with highlighting
-                    let lines = preview;
+                    // FOR TEXT FILES: Show only clean text (NO GIBBERISH)
                     contentPreview = `
-                        <pre>
-${lines.map(line => {
-    // Escape HTML to prevent XSS
-    const escapedLine = line.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-    
-    const isInfected = escapedLine.toLowerCase().includes('ransomware') || 
-                       escapedLine.toLowerCase().includes('backdoor') ||
-                       escapedLine.toLowerCase().includes('trojan') ||
-                       escapedLine.toLowerCase().includes('keylogger') ||
-                       escapedLine.toLowerCase().includes('eval') ||
-                       escapedLine.toLowerCase().includes('exec') ||
-                       escapedLine.toLowerCase().includes('base64');
-    return (isInfected ? '❌ ' : '✅ ') + escapedLine;
-}).join('\n')}
-                        </pre>
+                        <div class="no-content">
+                            <p>📄 This is a text file (${fileType || '.txt'})</p>
+                            <p>✅ Threat analysis complete. ${keywords.length > 0 ? `${keywords.length} suspicious keyword(s) found.` : 'No threats detected.'}</p>
+                            <p style="margin-top: 10px; font-size: 0.8rem;">Full content analysis is available in the keywords section above.</p>
+                        </div>
                     `;
                 }
                 
@@ -225,23 +202,24 @@ ${lines.map(line => {
                         <span style="font-size: 0.8rem;">${new Date(scan.timestamp).toLocaleString()}</span>
                     </div>
                     
-                    <p><strong>File:</strong> ${scan.filename}</p>
+                    <p><strong>File Name:</strong> ${scan.filename}</p>
                     <p><strong>Threat Level:</strong> <span class="${threatClass}">${analysis.threatLevel.toUpperCase()}</span></p>
                     <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
                     <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
                     
                     <h3 style="margin-top: 20px;">🔍 Detected Threat Keywords</h3>
                     <div style="margin-bottom: 20px;">
-                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No threats detected</p>'}
+                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No suspicious keywords or patterns detected</p>'}
                     </div>
                     
-                    <h3>📝 File Content Analysis</h3>
+                    <h3>📝 Analysis Summary</h3>
                     ${contentPreview}
                     
-                    <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
-                        <h4>📊 Summary</h4>
-                        <p>Total Threats Found: ${keywords.length}</p>
-                        <p>Risk Assessment: ${analysis.threatScore >= 70 ? '🔴 CRITICAL - Immediate action required' : 
+                    <div class="summary-box">
+                        <h4>📊 Executive Summary</h4>
+                        <p>• Total Threats Found: ${keywords.length}</p>
+                        <p>• Threat Score: ${analysis.threatScore}/100</p>
+                        <p>• Risk Assessment: ${analysis.threatScore >= 70 ? '🔴 CRITICAL - Immediate action required' : 
                                            (analysis.threatScore >= 35 ? '🟡 WARNING - Review recommended' : '🟢 SAFE - No immediate action needed')}</p>
                     </div>
                     
@@ -252,7 +230,7 @@ ${lines.map(line => {
                     </div>
                 `;
             } catch (error) {
-                console.error('Error loading report:', error);
+                console.error('Error:', error);
                 document.getElementById('reportContent').innerHTML = `
                     <div class="card-header">
                         <h3>❌ Error loading report</h3>
