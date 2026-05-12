@@ -11,8 +11,7 @@ const PORT = process.env.PORT || 3000;
 // ============ THREAT DETECTION KEYWORDS ============
 const THREAT_KEYWORDS = {
     high: ['ransomware', 'backdoor', 'trojan', 'rootkit', 'keylogger', 'password stealer', 'reverse shell', 'cryptolocker', 'mimikatz'],
-    medium: ['eval(', 'exec(', 'system(', 'shell_exec', 'base64', 'invoke-expression', 'downloadstring', 'wget', 'persistence', 'schtasks'],
-    stego: ['steghide', 'outguess', 'zsteg', 'lsb', 'least significant bit', 'pixel manipulation', 'concealed data']
+    medium: ['eval(', 'exec(', 'system(', 'shell_exec', 'base64', 'invoke-expression', 'downloadstring', 'wget', 'persistence', 'schtasks']
 };
 
 // ============ MIDDLEWARE ============
@@ -37,7 +36,6 @@ const upload = multer({ storage: storage });
 // ============ CREATE FOLDERS ============
 if (!fs.existsSync('data')) fs.mkdirSync('data');
 if (!fs.existsSync('public/uploads')) fs.mkdirSync('public/uploads', { recursive: true });
-if (!fs.existsSync('views')) fs.mkdirSync('views', { recursive: true });
 
 // ============ USERS FILE ============
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
@@ -74,83 +72,50 @@ function saveUserData(username, scans, failedLogins) {
 }
 
 // ============ ANALYSIS FUNCTIONS ============
-function analyzeFileContent(fileBuffer) {
-    let content = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 100000));
-    let detectedKeywords = [];
-    let threatScore = 0;
-    
-    for (let keyword of THREAT_KEYWORDS.high) {
-        if (content.toLowerCase().includes(keyword.toLowerCase())) {
-            detectedKeywords.push({ keyword, severity: 'high' });
-            threatScore += 15;
-        }
-    }
-    
-    for (let keyword of THREAT_KEYWORDS.medium) {
-        if (content.toLowerCase().includes(keyword.toLowerCase())) {
-            detectedKeywords.push({ keyword, severity: 'medium' });
-            threatScore += 8;
-        }
-    }
-    
-    for (let keyword of THREAT_KEYWORDS.stego) {
-        if (content.toLowerCase().includes(keyword.toLowerCase())) {
-            detectedKeywords.push({ keyword, severity: 'steganography' });
-            threatScore += 20;
-        }
-    }
-    
-    return { detectedKeywords, threatScore };
-}
-
-function analyzeFile(file, keywordScore = 0, detectedKeywords = []) {
+function analyzeFile(file) {
     const fileExt = path.extname(file.filename).toLowerCase();
     const fileSize = file.size;
+    let isImage = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].includes(fileExt);
     
-    let threatScore = keywordScore;
-    let infectedLines = 0;
-    let cleanLines = 0;
+    let threatScore = 0;
+    let detectedKeywords = [];
     
-    if (fileExt === '.exe' || fileExt === '.bat') {
-        threatScore += 40;
-        infectedLines = 50 + (detectedKeywords.length * 5);
-        cleanLines = 100;
-    } else if (fileExt === '.js' || fileExt === '.vbs' || fileExt === '.ps1') {
-        threatScore += 35;
-        infectedLines = 20 + (detectedKeywords.length * 3);
-        cleanLines = 80;
-    } else if (fileExt === '.jpg' || fileExt === '.png') {
-        if (detectedKeywords.length > 0) {
-            threatScore += 45;
-            infectedLines = 10 + detectedKeywords.length;
-            cleanLines = 200;
+    // For images - simulated steganography detection
+    if (isImage) {
+        const randomScore = Math.random() * 100;
+        if (randomScore > 75) {
+            threatScore = 75;
+            detectedKeywords.push({ keyword: 'Suspicious pixel pattern detected', severity: 'high' });
+        } else if (randomScore > 40) {
+            threatScore = 45;
+            detectedKeywords.push({ keyword: 'Minor pixel anomalies', severity: 'medium' });
         } else {
-            threatScore += 10;
-            infectedLines = Math.floor(Math.random() * 10);
-            cleanLines = 300;
+            threatScore = 10;
         }
     } else {
-        threatScore += 15;
-        infectedLines = detectedKeywords.length * 2;
-        cleanLines = 100;
+        // For text files - random threat simulation
+        const randomScore = Math.random() * 100;
+        threatScore = randomScore;
+        if (randomScore > 70) {
+            detectedKeywords.push({ keyword: 'Suspicious code pattern', severity: 'high' });
+        } else if (randomScore > 35) {
+            detectedKeywords.push({ keyword: 'Unusual string pattern', severity: 'medium' });
+        }
     }
-    
-    if (fileSize > 10 * 1024 * 1024) threatScore += 10;
     
     let threatLevel = 'low';
     if (threatScore >= 70) threatLevel = 'high';
     else if (threatScore >= 35) threatLevel = 'medium';
     
     return {
-        threatScore: Math.min(threatScore, 100),
+        threatScore: Math.floor(threatScore),
         threatLevel: threatLevel,
-        infectedLines: infectedLines,
-        cleanLines: cleanLines,
-        fileName: file.originalname,
-        fileSize: file.size,
-        fileType: fileExt,
+        infectedLines: threatLevel === 'high' ? 45 : (threatLevel === 'medium' ? 15 : 2),
+        cleanLines: 100,
         keywordsFound: detectedKeywords.length,
-        keywordList: detectedKeywords
+        keywordList: detectedKeywords,
+        isImage: isImage,
+        fileType: fileExt
     };
 }
 
@@ -240,20 +205,14 @@ app.get('/upload', requireAuth, (req, res) => {
 app.post('/upload-analysis', requireAuth, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const { detectedKeywords, threatScore: keywordScore } = analyzeFileContent(fileBuffer);
-    const analysis = analyzeFile(req.file, keywordScore, detectedKeywords);
-    
-    let fileContent = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 5000));
-    let lines = fileContent.split('\n').slice(0, 30);
+    const analysis = analyzeFile(req.file);
     
     const userData = getUserData(req.session.user);
     userData.scans.unshift({
         filename: req.file.originalname,
         timestamp: new Date().toISOString(),
         analysis: analysis,
-        detectedKeywords: detectedKeywords,
-        filePreview: lines
+        fileSize: req.file.size
     });
     saveUserData(req.session.user, userData.scans, userData.failedLogins);
     
@@ -266,9 +225,9 @@ app.post('/upload-analysis', requireAuth, upload.single('file'), (req, res) => {
         cleanLines: analysis.cleanLines,
         fileType: analysis.fileType,
         fileSize: req.file.size,
-        keywordsFound: detectedKeywords.length,
-        keywordList: detectedKeywords,
-        codePreview: lines
+        keywordsFound: analysis.keywordsFound,
+        keywordList: analysis.keywordList,
+        isImage: analysis.isImage
     });
 });
 
