@@ -31,7 +31,7 @@
         }
         .nav-links a:hover { color: #00c6ff; }
         .container {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 50px auto;
             padding: 20px;
         }
@@ -52,14 +52,6 @@
             border-radius: 5px;
             margin: 5px;
             font-size: 12px;
-        }
-        .image-report {
-            background: rgba(0, 198, 255, 0.1);
-            border: 1px solid #00c6ff;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
         }
         .btn-group {
             display: flex;
@@ -89,22 +81,20 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(0, 198, 255, 0.3);
-            flex-wrap: wrap;
-            gap: 10px;
         }
         .card-header h3 { color: #00c6ff; }
-        .no-content {
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-        }
         .summary-box {
             margin-top: 20px;
             padding: 15px;
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
+        }
+        .info-text {
+            background: rgba(0, 198, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -153,48 +143,11 @@
                 
                 const analysis = scan.analysis;
                 const keywords = scan.detectedKeywords || [];
-                const fileType = analysis.fileType || '';
-                const isImage = fileType === '.png' || fileType === '.jpg' || fileType === '.jpeg' || fileType === '.gif';
                 
                 let threatClass = '';
                 if (analysis.threatLevel === 'high') threatClass = 'threat-high';
                 else if (analysis.threatLevel === 'medium') threatClass = 'threat-medium';
                 else threatClass = 'threat-low';
-                
-                // FOR IMAGES: Show clean image report (NO GIBBERISH)
-                let contentPreview = '';
-                
-                if (isImage) {
-                    const sizeKB = (analysis.fileSize / 1024).toFixed(2);
-                    contentPreview = `
-                        <div class="image-report">
-                            <p style="font-size: 4rem;">🖼️</p>
-                            <h3>📷 IMAGE FORENSICS REPORT</h3>
-                            <p><strong>File Type:</strong> ${fileType.toUpperCase()}</p>
-                            <p><strong>File Size:</strong> ${sizeKB} KB</p>
-                            <p><strong>Steganography Analysis:</strong> <span style="color: ${keywords.length > 0 ? '#ffaa00' : '#00ff88'}">${keywords.length > 0 ? 'SUSPICIOUS PATTERNS FOUND' : 'CLEAN'}</span></p>
-                            <hr style="margin: 15px 0; border-color: #00c6ff;">
-                            <p><strong>✅ This image has been scanned for:</strong></p>
-                            <ul style="text-align: left; margin: 10px 0 10px 20px;">
-                                <li>🔍 LSB (Least Significant Bit) steganography</li>
-                                <li>🔍 Pixel manipulation anomalies</li>
-                                <li>🔍 Concealed data embedding patterns</li>
-                                <li>🔍 File structure integrity check</li>
-                                <li>🔍 Metadata forensics</li>
-                            </ul>
-                            <p style="margin-top: 15px; font-weight: bold;">${keywords.length > 0 ? '⚠️ ALERT: Suspicious patterns detected in this image!' : '✅ RESULT: No steganography found. The image appears clean.'}</p>
-                        </div>
-                    `;
-                } else {
-                    // FOR TEXT FILES: Show only clean text (NO GIBBERISH)
-                    contentPreview = `
-                        <div class="no-content">
-                            <p>📄 This is a text file (${fileType || '.txt'})</p>
-                            <p>✅ Threat analysis complete. ${keywords.length > 0 ? `${keywords.length} suspicious keyword(s) found.` : 'No threats detected.'}</p>
-                            <p style="margin-top: 10px; font-size: 0.8rem;">Full content analysis is available in the keywords section above.</p>
-                        </div>
-                    `;
-                }
                 
                 document.getElementById('reportContent').innerHTML = `
                     <div class="card-header">
@@ -203,20 +156,23 @@
                     </div>
                     
                     <p><strong>File Name:</strong> ${scan.filename}</p>
+                    <p><strong>File Type:</strong> ${analysis.fileType || 'Unknown'}</p>
+                    <p><strong>File Size:</strong> ${(analysis.fileSize / 1024).toFixed(2)} KB</p>
                     <p><strong>Threat Level:</strong> <span class="${threatClass}">${analysis.threatLevel.toUpperCase()}</span></p>
                     <p><strong>Threat Score:</strong> ${analysis.threatScore}/100</p>
                     <p><strong>Infected Lines:</strong> ${analysis.infectedLines} | <strong>Clean Lines:</strong> ${analysis.cleanLines}</p>
                     
-                    <h3 style="margin-top: 20px;">🔍 Detected Threat Keywords</h3>
-                    <div style="margin-bottom: 20px;">
-                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No suspicious keywords or patterns detected</p>'}
+                    <div class="info-text">
+                        🔍 ShadowHunt has analyzed this file for malware signatures, suspicious patterns, and steganography.
                     </div>
                     
-                    <h3>📝 Analysis Summary</h3>
-                    ${contentPreview}
+                    <h3 style="margin-top: 20px;">🔍 Detected Threats</h3>
+                    <div style="margin-bottom: 20px;">
+                        ${keywords.length > 0 ? keywords.map(k => `<span class="keyword-badge">⚠️ ${k.keyword} (${k.severity})</span>`).join('') : '<p>✅ No threats detected</p>'}
+                    </div>
                     
                     <div class="summary-box">
-                        <h4>📊 Executive Summary</h4>
+                        <h4>📊 Summary</h4>
                         <p>• Total Threats Found: ${keywords.length}</p>
                         <p>• Threat Score: ${analysis.threatScore}/100</p>
                         <p>• Risk Assessment: ${analysis.threatScore >= 70 ? '🔴 CRITICAL - Immediate action required' : 
