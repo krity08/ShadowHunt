@@ -31,7 +31,7 @@
         }
         .nav-links a:hover { color: #00c6ff; }
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 50px auto;
             padding: 20px;
         }
@@ -53,26 +53,13 @@
             margin: 5px;
             font-size: 12px;
         }
-        .infected-line {
-            background: rgba(255, 68, 68, 0.2);
-            border-left: 3px solid #ff4444;
-            padding: 8px;
-            margin: 5px 0;
-            font-family: monospace;
-        }
-        .clean-line {
-            background: rgba(0, 255, 136, 0.1);
-            border-left: 3px solid #00ff88;
-            padding: 8px;
-            margin: 5px 0;
-            font-family: monospace;
-        }
-        pre {
-            background: rgba(0,0,0,0.5);
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            max-height: 400px;
+        .image-report {
+            background: rgba(0, 198, 255, 0.1);
+            border: 1px solid #00c6ff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
         }
         .btn-group {
             display: flex;
@@ -103,6 +90,15 @@
             border-bottom: 1px solid rgba(0, 198, 255, 0.3);
         }
         .card-header h3 { color: #00c6ff; }
+        pre {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 400px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
@@ -132,7 +128,6 @@
 
         async function loadReport() {
             try {
-                // Get filename from URL
                 const filename = window.location.pathname.split('/').pop();
                 console.log('Loading report for:', filename);
                 
@@ -155,6 +150,8 @@
                 const analysis = scan.analysis;
                 const keywords = scan.detectedKeywords || [];
                 const preview = scan.filePreview || [];
+                const fileType = analysis.fileType || '';
+                const isImage = fileType === '.png' || fileType === '.jpg' || fileType === '.jpeg' || fileType === '.gif';
                 
                 let threatClass = '';
                 let threatColor = '';
@@ -167,6 +164,59 @@
                 } else {
                     threatClass = 'threat-low';
                     threatColor = '#00ff88';
+                }
+                
+                let contentPreview = '';
+                
+                if (isImage) {
+                    // For images - show clean image report
+                    const sizeMB = (analysis.fileSize / (1024 * 1024)).toFixed(2);
+                    const stegoRisk = keywords.length > 0 ? '⚠️ STEGANOGRAPHY SUSPECTED' : '✅ CLEAN';
+                    
+                    contentPreview = `
+                        <div class="image-report">
+                            <p style="font-size: 4rem;">🖼️</p>
+                            <h3>IMAGE FORENSICS REPORT</h3>
+                            <p><strong>File Type:</strong> ${fileType.toUpperCase()}</p>
+                            <p><strong>File Size:</strong> ${sizeMB} MB</p>
+                            <p><strong>Steganography Scan:</strong> <span style="color: ${keywords.length > 0 ? '#ff4444' : '#00ff88'}">${stegoRisk}</span></p>
+                            <hr style="margin: 15px 0; border-color: #00c6ff;">
+                            <p style="text-align: left;"><strong>What was checked:</strong></p>
+                            <ul style="text-align: left; margin-left: 20px;">
+                                <li>✅ LSB (Least Significant Bit) manipulation</li>
+                                <li>✅ Pixel value anomalies</li>
+                                <li>✅ Hidden data embedding patterns</li>
+                                <li>✅ File header integrity</li>
+                                <li>✅ Metadata forensics</li>
+                            </ul>
+                            <p style="margin-top: 15px;"><strong>${keywords.length > 0 ? '⚠️ Suspicious patterns detected! The image may contain hidden data.' : '✅ No steganography detected. The image appears clean.'}</strong></p>
+                        </div>
+                    `;
+                } else {
+                    // For text files - show actual content with highlighting
+                    let lines = preview;
+                    contentPreview = `
+                        <pre>
+${lines.map(line => {
+    // Escape HTML to prevent XSS
+    const escapedLine = line.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+    
+    const isInfected = escapedLine.toLowerCase().includes('ransomware') || 
+                       escapedLine.toLowerCase().includes('backdoor') ||
+                       escapedLine.toLowerCase().includes('trojan') ||
+                       escapedLine.toLowerCase().includes('keylogger') ||
+                       escapedLine.toLowerCase().includes('eval') ||
+                       escapedLine.toLowerCase().includes('exec') ||
+                       escapedLine.toLowerCase().includes('base64');
+    return (isInfected ? '❌ ' : '✅ ') + escapedLine;
+}).join('\n')}
+                        </pre>
+                    `;
                 }
                 
                 document.getElementById('reportContent').innerHTML = `
@@ -186,22 +236,19 @@
                     </div>
                     
                     <h3>📝 File Content Analysis</h3>
-                    <pre>
-${preview.map(line => {
-    const isInfected = line.toLowerCase().includes('ransomware') || 
-                       line.toLowerCase().includes('backdoor') ||
-                       line.toLowerCase().includes('trojan') ||
-                       line.toLowerCase().includes('keylogger') ||
-                       line.toLowerCase().includes('eval') ||
-                       line.toLowerCase().includes('exec') ||
-                       line.toLowerCase().includes('base64');
-    return (isInfected ? '❌ ' : '✅ ') + line;
-}).join('\n')}
-                    </pre>
+                    ${contentPreview}
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        <h4>📊 Summary</h4>
+                        <p>Total Threats Found: ${keywords.length}</p>
+                        <p>Risk Assessment: ${analysis.threatScore >= 70 ? '🔴 CRITICAL - Immediate action required' : 
+                                           (analysis.threatScore >= 35 ? '🟡 WARNING - Review recommended' : '🟢 SAFE - No immediate action needed')}</p>
+                    </div>
                     
                     <div class="btn-group">
                         <button class="btn-primary" onclick="location.href='/dashboard'">← Back to Dashboard</button>
                         <button class="btn-secondary" onclick="location.href='/upload'">📤 Upload New File</button>
+                        <button class="btn-primary" onclick="window.print()">🖨️ PRINT / SAVE PDF</button>
                     </div>
                 `;
             } catch (error) {
